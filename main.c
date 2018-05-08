@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <linux/input.h>
@@ -157,6 +158,11 @@ int main(int argc, char** argv) {
         if (cmd == 27) {
             cmd = getchar();
             cmd = getchar();
+        }
+
+        if (cmd >= 'A' && cmd <= 'Z') {
+            cmd = tolower(cmd);
+            shift = 1;
         }
 
         switch(cmd) {
