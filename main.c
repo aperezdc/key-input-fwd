@@ -85,6 +85,9 @@ int main(int argc, char** argv) {
 
     ioctl(fd, UI_SET_EVBIT, EV_KEY);
     ioctl(fd, UI_SET_EVBIT, EV_SYN);
+
+    ioctl(fd, UI_SET_KEYBIT, KEY_LEFTSHIFT);
+
     ioctl(fd, UI_SET_KEYBIT, KEY_LEFT);
     ioctl(fd, UI_SET_KEYBIT, KEY_RIGHT);
     ioctl(fd, UI_SET_KEYBIT, KEY_UP);
@@ -94,6 +97,9 @@ int main(int argc, char** argv) {
     ioctl(fd, UI_SET_KEYBIT, KEY_DELETE);
     ioctl(fd, UI_SET_KEYBIT, KEY_BACKSPACE);
     ioctl(fd, UI_SET_KEYBIT, KEY_SPACE);
+    ioctl(fd, UI_SET_KEYBIT, KEY_TAB);
+    ioctl(fd, UI_SET_KEYBIT, KEY_COMMA);
+    ioctl(fd, UI_SET_KEYBIT, KEY_SEMICOLON);
     ioctl(fd, UI_SET_KEYBIT, KEY_A);
     ioctl(fd, UI_SET_KEYBIT, KEY_B);
     ioctl(fd, UI_SET_KEYBIT, KEY_C);
@@ -145,6 +151,8 @@ int main(int argc, char** argv) {
     initTermios();
 
     while (1) {
+        int shift = 0;
+
         cmd = getchar();
         if (cmd == 27) {
             cmd = getchar();
@@ -152,14 +160,24 @@ int main(int argc, char** argv) {
         }
 
         switch(cmd) {
+        case '\t':
+            keycode = KEY_TAB;
+            break;
         case 27:
             keycode = KEY_ESC;
+            break;
+        case '@':
+            keycode = KEY_2;
+            shift = 1;
             break;
         case 32:
             keycode = KEY_SPACE;
             break;
         case 46:
             keycode = KEY_DOT;
+            break;
+        case ',':
+            keycode = KEY_COMMA;
             break;
         case 48:
             keycode = KEY_0;
@@ -294,8 +312,12 @@ int main(int argc, char** argv) {
         }
 
         if (keycode) {
+            if (shift)
+                send_key_event(fd, KEY_LEFTSHIFT, 1);
             send_key_event(fd, keycode, 1);
             send_key_event(fd, keycode, 0);
+            if (shift)
+                send_key_event(fd, KEY_LEFTSHIFT, 0);
         }
     }
 
