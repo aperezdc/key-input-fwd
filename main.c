@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
     ioctl(fd, UI_SET_KEYBIT, KEY_ESC);
     ioctl(fd, UI_SET_KEYBIT, KEY_DELETE);
     ioctl(fd, UI_SET_KEYBIT, KEY_BACKSPACE);
+    ioctl(fd, UI_SET_KEYBIT, KEY_SPACE);
     ioctl(fd, UI_SET_KEYBIT, KEY_A);
     ioctl(fd, UI_SET_KEYBIT, KEY_B);
     ioctl(fd, UI_SET_KEYBIT, KEY_C);
@@ -153,6 +154,9 @@ int main(int argc, char** argv) {
         switch(cmd) {
         case 27:
             keycode = KEY_ESC;
+            break;
+        case 32:
+            keycode = KEY_SPACE;
             break;
         case 46:
             keycode = KEY_DOT;
