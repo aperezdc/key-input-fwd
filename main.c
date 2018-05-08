@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
     ioctl(fd, UI_SET_KEYBIT, KEY_ENTER);
     ioctl(fd, UI_SET_KEYBIT, KEY_ESC);
     ioctl(fd, UI_SET_KEYBIT, KEY_DELETE);
+    ioctl(fd, UI_SET_KEYBIT, KEY_BACKSPACE);
     ioctl(fd, UI_SET_KEYBIT, KEY_A);
     ioctl(fd, UI_SET_KEYBIT, KEY_B);
     ioctl(fd, UI_SET_KEYBIT, KEY_C);
@@ -202,7 +203,7 @@ int main(int argc, char** argv) {
             keycode = KEY_ENTER;
             break;
         case 127:
-            keycode = KEY_DELETE;
+            keycode = KEY_BACKSPACE;
             break;
         case 97:
             keycode = KEY_A;
