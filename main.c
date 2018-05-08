@@ -27,6 +27,51 @@
 #include <signal.h>
 #include <termios.h>
 
+
+#define KK(kc, lc, uc)  [lc] = { kc }, [uc] = { kc, .shift = 1 }
+#define KL(kc, uc)      KK(kc, uc + ('a' - 'A'), uc)
+
+static const struct {
+    int key;
+    unsigned shift : 1;
+} s_keytable[256] = {
+    KK(KEY_0, '0', ')'),
+    KK(KEY_1, '1', '!'),
+    KK(KEY_2, '2', '@'),
+    KK(KEY_3, '3', '#'),
+    KK(KEY_4, '4', '$'),
+    KK(KEY_5, '5', '%'),
+    KK(KEY_6, '6', '^'),
+    KK(KEY_7, '7', '&'),
+    KK(KEY_8, '8', '*'),
+    KK(KEY_9, '9', '('),
+
+    KL(KEY_A, 'A'), KL(KEY_B, 'B'), KL(KEY_C, 'C'), KL(KEY_D, 'D'),
+    KL(KEY_E, 'E'), KL(KEY_F, 'F'), KL(KEY_G, 'G'), KL(KEY_H, 'H'),
+    KL(KEY_I, 'I'), KL(KEY_J, 'J'), KL(KEY_K, 'K'), KL(KEY_L, 'L'),
+    KL(KEY_M, 'M'), KL(KEY_N, 'N'), KL(KEY_O, 'O'), KL(KEY_P, 'P'),
+    KL(KEY_Q, 'Q'), KL(KEY_R, 'R'), KL(KEY_S, 'S'), KL(KEY_T, 'T'),
+    KL(KEY_U, 'U'), KL(KEY_V, 'V'), KL(KEY_W, 'W'), KL(KEY_X, 'X'),
+    KL(KEY_Y, 'Y'), KL(KEY_Z, 'Z'),
+
+    [ 27 ] = { KEY_ESC },
+    [ 65 ] = { KEY_UP },
+    [ 66 ] = { KEY_DOWN },
+    [ 67 ] = { KEY_RIGHT },
+    [ 68 ] = { KEY_LEFT },
+    [127 ] = { KEY_BACKSPACE },
+    [' ' ] = { KEY_SPACE },
+    ['.' ] = { KEY_DOT },
+    [',' ] = { KEY_COMMA },
+    ['\b'] = { KEY_BACKSPACE },
+    ['\n'] = { KEY_ENTER },
+    ['\t'] = { KEY_TAB },
+};
+
+#undef KL
+#undef KK
+
+
 static struct termios old, new;
 static int fd;
 
@@ -73,8 +118,6 @@ void intHandler(int dummy) {
 
 int main(int argc, char** argv) {
     struct uinput_user_dev uidev;
-    unsigned int keycode;
-    int cmd;
 
     signal(SIGINT, intHandler);
 
@@ -89,55 +132,11 @@ int main(int argc, char** argv) {
 
     ioctl(fd, UI_SET_KEYBIT, KEY_LEFTSHIFT);
 
-    ioctl(fd, UI_SET_KEYBIT, KEY_LEFT);
-    ioctl(fd, UI_SET_KEYBIT, KEY_RIGHT);
-    ioctl(fd, UI_SET_KEYBIT, KEY_UP);
-    ioctl(fd, UI_SET_KEYBIT, KEY_DOWN);
-    ioctl(fd, UI_SET_KEYBIT, KEY_ENTER);
-    ioctl(fd, UI_SET_KEYBIT, KEY_ESC);
-    ioctl(fd, UI_SET_KEYBIT, KEY_DELETE);
-    ioctl(fd, UI_SET_KEYBIT, KEY_BACKSPACE);
-    ioctl(fd, UI_SET_KEYBIT, KEY_SPACE);
-    ioctl(fd, UI_SET_KEYBIT, KEY_TAB);
-    ioctl(fd, UI_SET_KEYBIT, KEY_COMMA);
-    ioctl(fd, UI_SET_KEYBIT, KEY_SEMICOLON);
-    ioctl(fd, UI_SET_KEYBIT, KEY_A);
-    ioctl(fd, UI_SET_KEYBIT, KEY_B);
-    ioctl(fd, UI_SET_KEYBIT, KEY_C);
-    ioctl(fd, UI_SET_KEYBIT, KEY_D);
-    ioctl(fd, UI_SET_KEYBIT, KEY_E);
-    ioctl(fd, UI_SET_KEYBIT, KEY_F);
-    ioctl(fd, UI_SET_KEYBIT, KEY_G);
-    ioctl(fd, UI_SET_KEYBIT, KEY_H);
-    ioctl(fd, UI_SET_KEYBIT, KEY_I);
-    ioctl(fd, UI_SET_KEYBIT, KEY_J);
-    ioctl(fd, UI_SET_KEYBIT, KEY_K);
-    ioctl(fd, UI_SET_KEYBIT, KEY_L);
-    ioctl(fd, UI_SET_KEYBIT, KEY_M);
-    ioctl(fd, UI_SET_KEYBIT, KEY_N);
-    ioctl(fd, UI_SET_KEYBIT, KEY_O);
-    ioctl(fd, UI_SET_KEYBIT, KEY_P);
-    ioctl(fd, UI_SET_KEYBIT, KEY_Q);
-    ioctl(fd, UI_SET_KEYBIT, KEY_R);
-    ioctl(fd, UI_SET_KEYBIT, KEY_S);
-    ioctl(fd, UI_SET_KEYBIT, KEY_T);
-    ioctl(fd, UI_SET_KEYBIT, KEY_U);
-    ioctl(fd, UI_SET_KEYBIT, KEY_V);
-    ioctl(fd, UI_SET_KEYBIT, KEY_W);
-    ioctl(fd, UI_SET_KEYBIT, KEY_X);
-    ioctl(fd, UI_SET_KEYBIT, KEY_Y);
-    ioctl(fd, UI_SET_KEYBIT, KEY_Z);
-    ioctl(fd, UI_SET_KEYBIT, KEY_0);
-    ioctl(fd, UI_SET_KEYBIT, KEY_1);
-    ioctl(fd, UI_SET_KEYBIT, KEY_2);
-    ioctl(fd, UI_SET_KEYBIT, KEY_3);
-    ioctl(fd, UI_SET_KEYBIT, KEY_4);
-    ioctl(fd, UI_SET_KEYBIT, KEY_5);
-    ioctl(fd, UI_SET_KEYBIT, KEY_6);
-    ioctl(fd, UI_SET_KEYBIT, KEY_7);
-    ioctl(fd, UI_SET_KEYBIT, KEY_8);
-    ioctl(fd, UI_SET_KEYBIT, KEY_9);
-    ioctl(fd, UI_SET_KEYBIT, KEY_DOT);
+    for (unsigned i = 0; i < sizeof(s_keytable) / sizeof(s_keytable[0]); i++) {
+        if (s_keytable[i].key) {
+            ioctl(fd, UI_SET_KEYBIT, s_keytable[i].key);
+        }
+    }
 
     memset(&uidev, 0, sizeof(uidev));
     snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
@@ -152,170 +151,14 @@ int main(int argc, char** argv) {
     initTermios();
 
     while (1) {
-        int shift = 0;
-
-        cmd = getchar();
+        int cmd = getchar();
         if (cmd == 27) {
             cmd = getchar();
             cmd = getchar();
         }
 
-        if (cmd >= 'A' && cmd <= 'Z') {
-            cmd = tolower(cmd);
-            shift = 1;
-        }
-
-        switch(cmd) {
-        case '\t':
-            keycode = KEY_TAB;
-            break;
-        case 27:
-            keycode = KEY_ESC;
-            break;
-        case '@':
-            keycode = KEY_2;
-            shift = 1;
-            break;
-        case 32:
-            keycode = KEY_SPACE;
-            break;
-        case 46:
-            keycode = KEY_DOT;
-            break;
-        case ',':
-            keycode = KEY_COMMA;
-            break;
-        case 48:
-            keycode = KEY_0;
-            break;
-        case 49:
-            keycode = KEY_1;
-            break;
-        case 50:
-            keycode = KEY_2;
-            break;
-        case 51:
-            keycode = KEY_3;
-            break;
-        case 52:
-            keycode = KEY_4;
-            break;
-        case 53:
-            keycode = KEY_5;
-            break;
-        case 54:
-            keycode = KEY_6;
-            break;
-        case 55:
-            keycode = KEY_7;
-            break;
-        case 56:
-            keycode = KEY_8;
-            break;
-        case 59:
-            keycode = KEY_9;
-            break;
-        case 65:
-            keycode = KEY_UP;
-            break;
-        case 66:
-            keycode = KEY_DOWN;
-            break;
-        case 67:
-            keycode = KEY_RIGHT;
-            break;
-        case 68:
-            keycode = KEY_LEFT;
-            break;
-        case 10:
-            keycode = KEY_ENTER;
-            break;
-        case 127:
-            keycode = KEY_BACKSPACE;
-            break;
-        case 97:
-            keycode = KEY_A;
-            break;
-        case 98:
-            keycode = KEY_B;
-            break;
-        case 99:
-            keycode = KEY_C;
-            break;
-        case 100:
-            keycode = KEY_D;
-            break;
-        case 101:
-            keycode = KEY_E;
-            break;
-        case 102:
-            keycode = KEY_F;
-            break;
-        case 103:
-            keycode = KEY_G;
-            break;
-        case 104:
-            keycode = KEY_H;
-            break;
-        case 105:
-            keycode = KEY_I;
-            break;
-        case 106:
-            keycode = KEY_J;
-            break;
-        case 107:
-            keycode = KEY_K;
-            break;
-        case 108:
-            keycode = KEY_L;
-            break;
-        case 109:
-            keycode = KEY_M;
-            break;
-        case 110:
-            keycode = KEY_N;
-            break;
-        case 111:
-            keycode = KEY_O;
-            break;
-        case 112:
-            keycode = KEY_P;
-            break;
-        case 113:
-            keycode = KEY_Q;
-            break;
-        case 114:
-            keycode = KEY_R;
-            break;
-        case 115:
-            keycode = KEY_S;
-            break;
-        case 116:
-            keycode = KEY_T;
-            break;
-        case 117:
-            keycode = KEY_U;
-            break;
-        case 118:
-            keycode = KEY_V;
-            break;
-        case 119:
-            keycode = KEY_W;
-            break;
-        case 120:
-            keycode = KEY_X;
-            break;
-        case 121:
-            keycode = KEY_Y;
-            break;
-        case 122:
-            keycode = KEY_Z;
-            break;
-        default:
-            keycode = 0;
-            printf("unhandled key code: %d\n", cmd);
-            break;
-        }
+        int keycode = s_keytable[cmd & 0xFF].key;
+        int shift = s_keytable[cmd & 0xFF].shift;
 
         if (keycode) {
             if (shift)
@@ -324,6 +167,8 @@ int main(int argc, char** argv) {
             send_key_event(fd, keycode, 0);
             if (shift)
                 send_key_event(fd, KEY_LEFTSHIFT, 0);
+        } else {
+            fprintf(stderr, "unhandled key code: %d\n", cmd);
         }
     }
 
